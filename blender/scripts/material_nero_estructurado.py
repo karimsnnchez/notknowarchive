@@ -12,10 +12,14 @@ import bpy
 # 01. OBTENER OBJETO SELECCIONADO
 # ─────────────────────────────────────────────
 
+# En modo interactivo usa el objeto activo; en headless busca el primer mesh
 obj = bpy.context.active_object
 
 if obj is None or obj.type != 'MESH':
-    raise Exception("[not.know.archive] ERROR: Selecciona una malla (mesh) antes de ejecutar.")
+    obj = next((o for o in bpy.data.objects if o.type == 'MESH'), None)
+
+if obj is None:
+    raise Exception("[not.know.archive] ERROR: No se encontró ninguna malla en la escena.")
 
 print(f"[not.know.archive] Objeto detectado: {obj.name}")
 
@@ -144,7 +148,7 @@ bsdf.inputs['Base Color'].default_value = (0.012, 0.009, 0.008, 1.0)
 # Subsurface: mínimo, solo para que la piel "respire"
 bsdf.inputs['Subsurface Weight'].default_value = 0.03
 bsdf.inputs['Subsurface Scale'].default_value = 0.05
-bsdf.inputs['Subsurface Color'].default_value = (0.08, 0.03, 0.01, 1.0)
+bsdf.inputs['Subsurface Radius'].default_value = (0.08, 0.03, 0.01)  # RGB — profundidad orgánica
 
 # Especular y reflexión — la piel tiene brillo contenido, no plástico
 bsdf.inputs['Specular IOR Level'].default_value = 0.18
