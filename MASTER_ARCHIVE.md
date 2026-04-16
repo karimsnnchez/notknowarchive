@@ -80,6 +80,9 @@
 - **not.know.archive** — Espacio de archivo, editorial y concepto
 - Registro y renovación: documentar fechas en este archivo
 
+### Contacto oficial del proyecto
+- **notknowarchive@gmail.com** — Email vinculado al proyecto (Git, registros, proveedores, EUIPO)
+
 ---
 
 ## 05. PROTOCOLO DE ACTUALIZACIÓN
