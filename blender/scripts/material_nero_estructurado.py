@@ -60,7 +60,7 @@ tex_coord.location = (-1200, 0)
 mapping = nodes.new('ShaderNodeMapping')
 mapping.location = (-1000, 0)
 mapping.inputs['Scale'].default_value = (8.0, 8.0, 8.0)   # escala del grano
-links.new(tex_coord.outputs['UV'], mapping.inputs['Vector'])
+links.new(tex_coord.outputs['Object'], mapping.inputs['Vector'])
 
 
 # ── NOISE — grano superficial fino ──
@@ -115,8 +115,8 @@ links.new(ramp_pores.outputs['Color'], mix_bump.inputs['Color2'])
 # ── BUMP — relieve de la piel ──
 bump = nodes.new('ShaderNodeBump')
 bump.location = (-60, -60)
-bump.inputs['Strength'].default_value = 0.55    # relieve presente pero no exagerado
-bump.inputs['Distance'].default_value = 0.008   # micro-relieve
+bump.inputs['Strength'].default_value = 1.2     # relieve visible
+bump.inputs['Distance'].default_value = 0.06    # grano perceptible
 links.new(mix_bump.outputs['Color'], bump.inputs['Height'])
 
 
