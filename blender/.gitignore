@@ -1,0 +1,11 @@
+# Renders — archivos de salida pesados, no versionar
+renders/
+*.exr
+*.hdr
+
+# Archivos temporales de Blender
+*.blend1
+*.blend2
+
+# Cache de simulaciones
+cache/
