@@ -147,3 +147,11 @@ print(f"  Resolución:   {scene.render.resolution_x} × {scene.render.resolution
 print(f"  Samples:      {cycles.samples}")
 print(f"  Luces:        {[o.name for o in bpy.data.objects if o.type == 'LIGHT']}")
 print("────────────────────────────────────────\n")
+
+
+# ─────────────────────────────────────────────
+# 06. GUARDAR
+# ─────────────────────────────────────────────
+
+bpy.ops.wm.save_mainfile()
+print("[not.know.archive] Archivo guardado.")
