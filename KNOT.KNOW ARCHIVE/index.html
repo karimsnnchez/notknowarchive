@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>not.know // archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&family=Roboto+Flex:opsz,wdth,wght@8..144,75..125,100..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #FAFAFA;
+      --surface: #F4F4F4;
+      --line:    #E0E0E0;
+      --cement:  #999999;
+      --text:    #111111;
+      --bar-h:   44px;
+      --f-display:'Roboto Flex', sans-serif;
+      --f-serif: 'Cormorant Garamond', serif;
+      --f-mono:  'Space Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--f-mono);
+      cursor: crosshair;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { background: none; border: none; cursor: crosshair; font-family: var(--f-mono); color: inherit; }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: 200px; height: 100vh;
+      background: var(--bg);
+      border-right: 1px solid var(--line);
+      display: flex; flex-direction: column;
+      padding: 20px 18px;
+      transform: translateX(-196px);
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+    .sidebar:hover { transform: translateX(0); }
+    .sidebar-logo { font-size: 10px; color: var(--text); letter-spacing: 0.05em; margin-bottom: 3px; }
+    .sidebar-tag  { font-size: 9px; color: var(--cement); margin-bottom: 28px; }
+    .sidebar-nav  { display: flex; flex-direction: column; flex: 1; }
+    .sidebar-nav a { font-size: 11px; color: var(--cement); padding: 9px 0; letter-spacing: 0.06em; border-bottom: 1px solid var(--line); transition: color 0.2s; }
+    .sidebar-nav a:hover, .sidebar-nav a.active { color: var(--text); }
+    .sidebar-foot { padding-top: 16px; border-top: 1px solid var(--line); }
+    .sidebar-foot .name   { font-size: 10px; color: var(--text); margin-bottom: 2px; }
+    .sidebar-foot .handle { font-size: 9px; color: var(--cement); margin-bottom: 12px; }
+    .btn-enviar { width: 100%; border: 1px solid var(--text); padding: 7px 0; font-size: 9px; letter-spacing: 0.12em; color: var(--text); transition: all 0.2s; }
+    .btn-enviar:hover { background: var(--text); color: var(--bg); }
+
+    /* TOP BAR */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--bar-h);
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center;
+      padding: 0 32px; z-index: 50;
+    }
+    .topbar-logo {
+      font-family: var(--f-display);
+      font-size: 13px;
+      font-variation-settings: 'wdth' 100, 'wght' 300;
+      color: var(--text); letter-spacing: 0.08em;
+      margin-right: auto;
+    }
+    .mode-toggle { display: flex; }
+    .mode-btn {
+      font-size: 10px; letter-spacing: 0.1em;
+      padding: 0 18px; height: var(--bar-h);
+      color: var(--cement);
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .mode-btn.active { color: var(--text); border-bottom-color: var(--text); }
+    .topbar-clock { font-size: 10px; color: var(--cement); letter-spacing: 0.05em; margin-left: 32px; }
+
+    /* LAYOUT */
+    .layout {
+      margin-top: var(--bar-h);
+      max-width: 1400px;
+      margin-left: auto; margin-right: auto;
+    }
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+      min-height: 600px;
+    }
+    .hero-image {
+      position: relative; overflow: hidden;
+      border-right: 1px solid var(--line);
+    }
+    .hero-image img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 0.6s ease;
+    }
+    .hero:hover .hero-image img { transform: scale(1.02); }
+    .hero-image-caption {
+      position: absolute; bottom: 16px; left: 16px;
+      font-size: 9px; color: rgba(255,255,255,0.7);
+      letter-spacing: 0.08em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .hero-body {
+      padding: 52px 52px 36px;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+    }
+    .hero-cat { font-size: 9px; color: var(--cement); letter-spacing: 0.16em; margin-bottom: 24px; }
+    .hero-title {
+      font-family: var(--f-display);
+      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      font-variation-settings: 'wdth' 100, 'wght' 200;
+      text-transform: uppercase;
+      letter-spacing: 0.02em; line-height: 1.0;
+      color: var(--text); margin-bottom: 28px;
+    }
+    .hero-text {
+      font-family: var(--f-serif);
+      font-size: 1.1rem; font-weight: 300;
+      line-height: 1.85; color: var(--text);
+      opacity: 0.75; flex: 1; margin-bottom: 36px;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap; padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+    .meta-author { font-size: 10px; color: var(--text); letter-spacing: 0.06em; }
+    .meta-date, .meta-time { font-size: 10px; color: var(--cement); }
+    .meta-tag {
+      font-size: 9px; padding: 2px 8px;
+      border: 1px solid var(--line);
+      color: var(--cement); letter-spacing: 0.08em;
+      transition: all 0.2s;
+    }
+    .meta-tag:hover { border-color: var(--text); color: var(--text); }
+    .hero-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .action-btn {
+      font-size: 9px; letter-spacing: 0.12em;
+      padding: 6px 14px; border: 1px solid var(--line);
+      color: var(--cement); transition: all 0.2s;
+    }
+    .action-btn:hover, .action-btn.archived { border-color: var(--text); color: var(--text); }
+
+    /* GRID */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .grid-wide { grid-template-columns: 2fr 1fr; }
+
+    .post-card {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      transition: background 0.2s;
+    }
+    .post-card:last-child { border-right: none; }
+    .post-card:hover { background: var(--surface); }
+
+    .card-image {
+      width: 100%; aspect-ratio: 4/3;
+      overflow: hidden;
+    }
+    .card-image.wide { aspect-ratio: 16/7; }
+    .card-image img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 0.5s ease;
+    }
+    .post-card:hover .card-image img { transform: scale(1.03); }
+
+    .card-body { padding: 20px 22px 18px; }
+    .card-cat  { font-size: 9px; color: var(--cement); letter-spacing: 0.14em; margin-bottom: 10px; }
+    .card-title {
+      font-family: var(--f-display);
+      font-size: clamp(1rem, 1.4vw, 1.35rem);
+      font-variation-settings: 'wdth' 100, 'wght' 200;
+      text-transform: uppercase;
+      letter-spacing: 0.02em; line-height: 1.1;
+      color: var(--text); margin-bottom: 10px;
+    }
+    .card-excerpt {
+      font-family: var(--f-serif);
+      font-size: 0.95rem; font-weight: 300;
+      line-height: 1.65; color: var(--text);
+      opacity: 0.65; margin-bottom: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-meta {
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 9px; color: var(--cement);
+    }
+    .card-author { color: var(--text); }
+
+    /* PULLQUOTE */
+    .pullquote-card {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 44px 36px;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      background: var(--surface);
+    }
+    .pullquote-card blockquote {
+      font-family: var(--f-serif);
+      font-size: 1.4rem; font-style: italic;
+      font-weight: 300; line-height: 1.55;
+      color: var(--text); margin-bottom: 18px;
+      border-left: 1px solid var(--text);
+      padding-left: 20px;
+    }
+    .pullquote-attr { font-size: 9px; color: var(--cement); letter-spacing: 0.06em; padding-left: 21px; }
+
+    /* STUDIO (antes LABS) */
+    .studio-header {
+      padding: 14px 32px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: baseline; gap: 16px;
+    }
+    .studio-header-title { font-size: 9px; color: var(--text); letter-spacing: 0.14em; }
+    .studio-header-sub   { font-size: 9px; color: var(--cement); letter-spacing: 0.06em; }
+
+    .studio-card {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+      min-height: 440px;
+    }
+    .studio-image {
+      border-right: 1px solid var(--line);
+      overflow: hidden; position: relative;
+    }
+    .studio-image img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 0.5s ease;
+    }
+    .studio-card:hover .studio-image img { transform: scale(1.02); }
+    .studio-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 14px 18px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.65));
+    }
+    .studio-ref   { display: block; font-size: 9px; color: #fff; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .studio-stack { font-size: 8px; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.4); padding: 2px 6px; display: inline-block; }
+    .studio-info  { padding: 32px 36px; display: flex; flex-direction: column; }
+    .studio-cat   { font-size: 9px; color: var(--cement); letter-spacing: 0.14em; margin-bottom: 12px; }
+    .studio-title {
+      font-family: var(--f-display);
+      font-size: clamp(1.5rem, 2.2vw, 2.2rem);
+      font-variation-settings: 'wdth' 100, 'wght' 200;
+      text-transform: uppercase;
+      letter-spacing: 0.03em; line-height: 1.05;
+      color: var(--text); margin-bottom: 14px;
+    }
+    .studio-desc { font-size: 10px; color: var(--cement); line-height: 1.75; letter-spacing: 0.03em; margin-bottom: 24px; }
+    .specs { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .specs tr  { border-bottom: 1px solid var(--line); }
+    .specs td  { padding: 8px 0; font-size: 9px; letter-spacing: 0.06em; }
+    .specs td:first-child { color: var(--cement); }
+    .specs td:last-child  { color: var(--text); text-align: right; }
+    .ref-section { margin-top: auto; }
+    .ref-label { font-size: 9px; color: var(--cement); letter-spacing: 0.1em; margin-bottom: 10px; }
+    .ref-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 9px; }
+    .ref-name { color: var(--text); }
+    .ref-area { color: var(--cement); }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(250,250,250,0.88); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg); border: 1px solid var(--line); width: 380px; padding: 28px; }
+    .modal-title { font-size: 9px; color: var(--text); letter-spacing: 0.14em; margin-bottom: 16px; }
+    .modal textarea { width: 100%; background: var(--surface); border: 1px solid var(--line); color: var(--text); font-family: var(--f-mono); font-size: 10px; padding: 12px; resize: vertical; min-height: 90px; outline: none; cursor: crosshair; margin-bottom: 14px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn-cancel { font-size: 9px; letter-spacing: 0.08em; padding: 6px 14px; border: 1px solid var(--line); color: var(--cement); }
+    .btn-save   { font-size: 9px; letter-spacing: 0.08em; padding: 6px 14px; border: 1px solid var(--text); color: var(--text); }
+    .btn-save:hover { background: var(--text); color: var(--bg); }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--line); }
+
+    #archive-feed { display: block; }
+    #studio-feed  { display: none; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">not.know // archive</div>
+  <div class="sidebar-tag">infraestructura para creativos</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="active">Inicio</a>
+    <a href="#">Perfil</a>
+    <a href="#">Anotaciones</a>
+    <a href="#">Explorar</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="name">Nombre Creativo</div>
+    <div class="handle">@handle</div>
+    <button class="btn-enviar">+ ENVIAR TRABAJO</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <span class="topbar-logo">NOT.KNOW // ARCHIVE</span>
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="archive">_ARCHIVE</button>
+    <button class="mode-btn" data-mode="studio">_STUDIO</button>
+  </div>
+  <span class="topbar-clock" id="clock">00:00:00</span>
+</header>
+
+<div class="layout">
+
+  <!-- ARCHIVE FEED -->
+  <div id="archive-feed">
+
+    <article class="hero">
+      <div class="hero-image">
+        <img src="images/almacen.jpg" alt="Almacén de pieles">
+        <div class="hero-image-caption">Almacén — Curtidos vegetales y al cromo</div>
+      </div>
+      <div class="hero-body">
+        <div>
+          <div class="hero-cat">_ARCHIVE</div>
+          <div class="hero-title">El Archivo de la Piel</div>
+          <div class="hero-text">
+            Un almacén de pieles no es un almacén. Es una biblioteca. Cada rollo tiene una historia que empieza en una curtidería y termina —o debería terminar— en un objeto que dure décadas. La diferencia entre el cuero que envejece bien y el que se deteriora no está en la marca. Está en cómo fue tratado antes de convertirse en material.
+          </div>
+        </div>
+        <div>
+          <div class="hero-meta">
+            <span class="meta-author">not.know</span>
+            <span class="meta-date">12.07.26</span>
+            <span class="meta-time">· 6 min</span>
+            <span class="meta-tag">CURTIDO</span>
+            <span class="meta-tag">MATERIAL</span>
+          </div>
+          <div class="hero-actions">
+            <button class="action-btn" onclick="archivar(this)">ARCHIVAR</button>
+            <button class="action-btn" onclick="abrirModal()">ANOTAR</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <div class="grid">
+      <div class="post-card">
+        <div class="card-image">
+          <img src="images/corte.jpg" alt="Corte de piel">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">_ARCHIVE</div>
+          <div class="card-title">El Corte — Primera Decisión</div>
+          <div class="card-excerpt">Antes de que el zapato exista, existe el patrón sobre la piel. El cortador decide en segundos qué parte del animal irá en el empeine. Esa decisión no se enseña en ningún manual.</div>
+          <div class="card-meta">
+            <span class="card-author">not.know</span>
+            <span>08.06.26</span>
+            <span>· 5 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pullquote-card">
+        <blockquote>"La piel no envejece. Archiva. Cada pliegue es una anotación que el tiempo dejó sin firmar."</blockquote>
+        <div class="pullquote-attr">— Chiara Ventura, Notas de laboratorio, marzo 2026</div>
+      </div>
+
+      <div class="post-card">
+        <div class="card-image">
+          <img src="images/patrones.jpg" alt="Patrones de corte">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">_ARCHIVE</div>
+          <div class="card-title">Patronaje — La Geometría del Pie</div>
+          <div class="card-excerpt">Las plantillas de aluminio no cambian. Lo que cambia es la piel debajo de ellas. El mismo patrón sobre un cuero vegetal y sobre un cromo produce resultados radicalmente distintos.</div>
+          <div class="card-meta">
+            <span class="card-author">not.know</span>
+            <span>15.06.26</span>
+            <span>· 4 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-wide">
+      <div class="post-card">
+        <div class="card-image wide">
+          <img src="images/tejidos.jpg" alt="Archivo de tejidos">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">_ARCHIVE</div>
+          <div class="card-title">El Archivo de los Tejidos</div>
+          <div class="card-excerpt">Mil metros de tejido enrollados no son mercancía. Son posibilidades. Cada rollo es una pregunta sin responder todavía.</div>
+          <div class="card-meta">
+            <span class="card-author">not.know</span>
+            <span>03.07.26</span>
+            <span>· 6 min</span>
+            <span class="meta-tag">TEJIDO</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="card-image">
+          <img src="images/hormas.jpg" alt="Hormas">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">_ARCHIVE</div>
+          <div class="card-title">La Horma — Memoria del Pie</div>
+          <div class="card-excerpt">Una horma es la abstracción de un pie. No de un pie concreto — de un pie ideal. Ahí empieza la ficción del calzado.</div>
+          <div class="card-meta">
+            <span class="card-author">not.know</span>
+            <span>22.06.26</span>
+            <span>· 3 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /archive-feed -->
+
+  <!-- STUDIO FEED -->
+  <div id="studio-feed">
+    <div class="studio-header">
+      <span class="studio-header-title">_STUDIO — REPOSITORIO TÉCNICO</span>
+      <span class="studio-header-sub">Despieces · Fichas de Material · Documentación</span>
+    </div>
+
+    <article class="studio-card">
+      <div class="studio-image">
+        <img src="images/montado.jpg" alt="Proceso de montado">
+        <div class="studio-overlay">
+          <span class="studio-ref">MONTADO A MANO // PROCESO DE ENCOLADO</span>
+          <span class="studio-stack">CALZADO // DOCUMENTACIÓN DE PROCESO</span>
+        </div>
+      </div>
+      <div class="studio-info">
+        <div class="studio-cat">_STUDIO</div>
+        <div class="studio-title">Montado 01 — Encolado</div>
+        <div class="studio-desc">El montado es el momento en que el zapato deja de ser partes y se convierte en objeto. El proceso de encolado manual permite un control de tensión imposible de replicar en línea automática.</div>
+        <table class="specs">
+          <tr><td>PROCESO</td><td>Montado a mano</td></tr>
+          <tr><td>ADHESIVO</td><td>Policloropreno</td></tr>
+          <tr><td>TEMPERATURA</td><td>60–70°C activación</td></tr>
+          <tr><td>PRESIÓN</td><td>Manual, uniforme</td></tr>
+          <tr><td>TIEMPO SECADO</td><td>24h mínimo</td></tr>
+          <tr><td>CONTROL</td><td>Visual + táctil</td></tr>
+        </table>
+        <div class="ref-section">
+          <div class="ref-label">Referencias técnicas</div>
+          <div class="ref-row"><span class="ref-name">SATRA Technology</span><span class="ref-area">Adhesive Testing</span></div>
+          <div class="ref-row"><span class="ref-name">INESCOP</span><span class="ref-area">Elda, España</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="studio-card">
+      <div class="studio-image">
+        <img src="images/acabado.jpg" alt="Proceso de acabado">
+        <div class="studio-overlay">
+          <span class="studio-ref">ACABADO DE CANTO // TRATAMIENTO DE BORDE</span>
+          <span class="studio-stack">CALZADO // DOCUMENTACIÓN DE PROCESO</span>
+        </div>
+      </div>
+      <div class="studio-info">
+        <div class="studio-cat">_STUDIO</div>
+        <div class="studio-title">Acabado 01 — Canto de Suela</div>
+        <div class="studio-desc">El tratamiento del canto de suela es uno de los indicadores más fiables de la calidad de un zapato. Un canto bien trabajado requiere entre tres y cinco pasadas manuales.</div>
+        <table class="specs">
+          <tr><td>OPERACIÓN</td><td>Acabado de canto</td></tr>
+          <tr><td>HERRAMIENTA</td><td>Lijadora de banda</td></tr>
+          <tr><td>GRAINEADO</td><td>80 → 120 → 240</td></tr>
+          <tr><td>TINTE</td><td>Anilina al agua</td></tr>
+          <tr><td>ACABADO</td><td>Cera natural</td></tr>
+          <tr><td>PASADAS</td><td>3–5 manuales</td></tr>
+        </table>
+        <div class="ref-section">
+          <div class="ref-label">Referencias técnicas</div>
+          <div class="ref-row"><span class="ref-name">Cordwainers College</span><span class="ref-area">Finishing Techniques</span></div>
+          <div class="ref-row"><span class="ref-name">INESCOP</span><span class="ref-area">Elda, España</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="studio-card">
+      <div class="studio-image">
+        <img src="images/taller.jpg" alt="Vista del taller">
+        <div class="studio-overlay">
+          <span class="studio-ref">EXTERIOR DE FÁBRICA // SUELAS EN PROCESO</span>
+          <span class="studio-stack">PRODUCCIÓN // DOCUMENTACIÓN DE ENTORNO</span>
+        </div>
+      </div>
+      <div class="studio-info">
+        <div class="studio-cat">_STUDIO</div>
+        <div class="studio-title">Fábrica 01 — El Exterior</div>
+        <div class="studio-desc">Lo que ocurre fuera de la fábrica es tan parte del proceso como lo que ocurre dentro. Los descansos, el sol, las suelas apiladas esperando.</div>
+        <table class="specs">
+          <tr><td>UBICACIÓN</td><td>India, zona industrial</td></tr>
+          <tr><td>OPERACIÓN</td><td>Acabado de suelas</td></tr>
+          <tr><td>MATERIAL</td><td>TR — Thermoplastic Rubber</td></tr>
+          <tr><td>CAPACIDAD</td><td>800–1200 pares/día</td></tr>
+          <tr><td>TURNO</td><td>8h, luz natural</td></tr>
+          <tr><td>CONTROL</td><td>Visual + tacto</td></tr>
+        </table>
+        <div class="ref-section">
+          <div class="ref-label">Contexto</div>
+          <div class="ref-row"><span class="ref-name">not.know</span><span class="ref-area">Documentación directa</span></div>
+          <div class="ref-row"><span class="ref-name">Visita de fábrica</span><span class="ref-area">2024</span></div>
+        </div>
+      </div>
+    </article>
+
+  </div><!-- /studio-feed -->
+
+</div><!-- /layout -->
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">ANOTACIÓN DE MARGEN</div>
+    <textarea placeholder="Escribe tu anotación..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('clock').textContent =
+      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isStudio = btn.dataset.mode === 'studio';
+      document.getElementById('archive-feed').style.display = isStudio ? 'none' : 'block';
+      document.getElementById('studio-feed').style.display  = isStudio ? 'block' : 'none';
+    });
+  });
+
+  function archivar(btn) {
+    const on = btn.dataset.archived === 'true';
+    btn.textContent = on ? 'ARCHIVAR' : 'ARCHIVADO';
+    btn.classList.toggle('archived', !on);
+    btn.dataset.archived = on ? 'false' : 'true';
+  }
+
+  function abrirModal()  { document.getElementById('modal').classList.add('open'); }
+  function cerrarModal() { document.getElementById('modal').classList.remove('open'); }
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) cerrarModal();
+  });
+</script>
+</body>
+</html>
