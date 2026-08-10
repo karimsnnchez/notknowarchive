@@ -155,22 +155,34 @@
     .action-btn:hover, .action-btn.archived { border-color: var(--text); color: var(--text); }
 
     /* GRID */
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-    .grid-wide { grid-template-columns: 2fr 1fr; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 190px;
+      grid-auto-flow: dense;
+    }
+
+    .post-card, .pullquote-card { grid-column: span 3; grid-row: span 1; }
+    .post-card.size-s  { grid-column: span 2; }
+    .post-card.size-m  { grid-column: span 3; }
+    .post-card.size-l  { grid-column: span 3; grid-row: span 2; }
+    .post-card.size-xl { grid-column: span 6; grid-row: span 2; }
 
     .post-card {
       border-right: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
       transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
-    .post-card:last-child { border-right: none; }
     .post-card:hover { background: var(--surface); }
 
     .card-image {
-      width: 100%; aspect-ratio: 4/3;
+      width: 100%; flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
-    .card-image.wide { aspect-ratio: 16/7; }
     .card-image img {
       width: 100%; height: 100%;
       object-fit: cover; display: block;
@@ -358,8 +370,8 @@
       </div>
     </article>
 
-    <div class="grid">
-      <div class="post-card">
+    <div class="grid" id="archive-grid">
+      <div class="post-card" data-date="2026-06-08">
         <div class="card-image">
           <img src="images/corte.jpg" alt="Corte de piel">
         </div>
@@ -375,12 +387,12 @@
         </div>
       </div>
 
-      <div class="pullquote-card">
+      <div class="pullquote-card" data-date="2026-03-01">
         <blockquote>"La piel no envejece. Archiva. Cada pliegue es una anotación que el tiempo dejó sin firmar."</blockquote>
         <div class="pullquote-attr">— Chiara Ventura, Notas de laboratorio, marzo 2026</div>
       </div>
 
-      <div class="post-card">
+      <div class="post-card" data-date="2026-06-15">
         <div class="card-image">
           <img src="images/patrones.jpg" alt="Patrones de corte">
         </div>
@@ -395,11 +407,9 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="grid grid-wide">
-      <div class="post-card">
-        <div class="card-image wide">
+      <div class="post-card" data-date="2026-07-03">
+        <div class="card-image">
           <img src="images/tejidos.jpg" alt="Archivo de tejidos">
         </div>
         <div class="card-body">
@@ -415,7 +425,7 @@
         </div>
       </div>
 
-      <div class="post-card">
+      <div class="post-card" data-date="2026-06-22">
         <div class="card-image">
           <img src="images/hormas.jpg" alt="Hormas">
         </div>
@@ -441,7 +451,7 @@
       <span class="studio-header-sub">Despieces · Fichas de Material · Documentación</span>
     </div>
 
-    <article class="studio-card">
+    <article class="studio-card" data-date="2026-07-20">
       <div class="studio-image">
         <img src="images/montado.jpg" alt="Proceso de montado">
         <div class="studio-overlay">
@@ -469,7 +479,7 @@
       </div>
     </article>
 
-    <article class="studio-card">
+    <article class="studio-card" data-date="2026-07-15">
       <div class="studio-image">
         <img src="images/acabado.jpg" alt="Proceso de acabado">
         <div class="studio-overlay">
@@ -497,7 +507,7 @@
       </div>
     </article>
 
-    <article class="studio-card">
+    <article class="studio-card" data-date="2026-07-10">
       <div class="studio-image">
         <img src="images/taller.jpg" alt="Vista del taller">
         <div class="studio-overlay">
@@ -572,6 +582,187 @@
   document.getElementById('modal').addEventListener('click', e => {
     if (e.target === document.getElementById('modal')) cerrarModal();
   });
+
+  /* ---- Publicaciones desde Decap CMS (GitHub) ---- */
+  const GITHUB_REPO   = 'karimsnnchez/notknowarchive';
+  const GITHUB_BRANCH = 'main';
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const p = n => String(n).padStart(2, '0');
+    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
+  }
+
+  function resolveImage(val) {
+    if (!val) return '';
+    let name = val.includes('→') ? val.split('→').pop().trim() : val.trim();
+    name = name.replace(/^images\//, '');
+    return 'images/' + name;
+  }
+
+  function stripQuotes(s) {
+    s = s.trim();
+    const m = s.match(/^"([\s\S]*)"$/);
+    return m ? m[1] : s;
+  }
+
+  // Parser mínimo de frontmatter YAML (soporta listas simples y listas de {key,value})
+  function parseFrontmatter(raw) {
+    const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+    if (!m) return { data: {}, body: raw.trim() };
+    const lines = m[1].split('\n');
+    const body = m[2].trim();
+    const data = {};
+    let i = 0;
+    while (i < lines.length) {
+      const top = lines[i].match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+      if (!top) { i++; continue; }
+      const [, key, val] = top;
+      if (val.trim() !== '') { data[key] = stripQuotes(val); i++; continue; }
+      const items = [];
+      i++;
+      while (i < lines.length && /^\s*-\s*/.test(lines[i])) {
+        const first = lines[i].match(/^\s*-\s*(.*)$/)[1];
+        const kv = first.match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+        if (kv) {
+          const obj = { [kv[1]]: stripQuotes(kv[2]) };
+          i++;
+          while (i < lines.length && /^\s{2,}[A-Za-z0-9_]+:/.test(lines[i])) {
+            const kv2 = lines[i].trim().match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+            if (kv2) obj[kv2[1]] = stripQuotes(kv2[2]);
+            i++;
+          }
+          items.push(obj);
+        } else {
+          items.push(stripQuotes(first));
+          i++;
+        }
+      }
+      data[key] = items;
+    }
+    return { data, body };
+  }
+
+  async function fetchMarkdownFiles(folder) {
+    try {
+      const path = folder.split('/').map(encodeURIComponent).join('/');
+      const listRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}?ref=${GITHUB_BRANCH}`);
+      if (!listRes.ok) return [];
+      const files = await listRes.json();
+      if (!Array.isArray(files)) return [];
+      const mdFiles = files.filter(f => f.name.endsWith('.md'));
+      return await Promise.all(mdFiles.map(async f => {
+        const raw = await fetch(f.download_url).then(r => r.text());
+        return parseFrontmatter(raw);
+      }));
+    } catch (err) {
+      console.warn('No se pudieron cargar publicaciones de', folder, err);
+      return [];
+    }
+  }
+
+  // Tamaño "aleatorio" pero estable: depende del título, no cambia entre recargas
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  const SIZE_POOL = ['s', 's', 'm', 'm', 'm', 'm', 'l', 'xl'];
+  function pickSize(seed) { return SIZE_POOL[hashStr(seed) % SIZE_POOL.length]; }
+
+  function buildArchiveCard(post) {
+    const { data, body } = post;
+    const div = document.createElement('div');
+    const date = (data.date || '').slice(0, 10) || '1970-01-01';
+    div.className = 'post-card';
+    div.dataset.date = date;
+    const img = resolveImage(data.image);
+    const excerpt = body.replace(/[#*_`>]/g, '').slice(0, 180);
+    const readMin = Math.max(1, Math.round(body.split(/\s+/).filter(Boolean).length / 200));
+    const tags = Array.isArray(data.tags) ? data.tags : [];
+    div.innerHTML = `
+      <div class="card-image"><img src="${img}" alt="${escapeHtml(data.title)}"></div>
+      <div class="card-body">
+        <div class="card-cat">_ARCHIVE</div>
+        <div class="card-title">${escapeHtml(data.title || 'Sin título')}</div>
+        <div class="card-excerpt">${escapeHtml(excerpt)}</div>
+        <div class="card-meta">
+          <span class="card-author">${escapeHtml(data.author || 'not.know')}</span>
+          <span>${formatDate(date)}</span>
+          <span>· ${readMin} min</span>
+          ${tags.map(t => `<span class="meta-tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function buildStudioCard(post) {
+    const { data } = post;
+    const div = document.createElement('article');
+    const date = (data.date || '').slice(0, 10) || '1970-01-01';
+    div.className = 'studio-card';
+    div.dataset.date = date;
+    const img = resolveImage(data.image);
+    const specs = Array.isArray(data.specs) ? data.specs : [];
+    div.innerHTML = `
+      <div class="studio-image">
+        <img src="${img}" alt="${escapeHtml(data.title)}">
+        <div class="studio-overlay">
+          <span class="studio-ref">${escapeHtml(data.title || '')}</span>
+          <span class="studio-stack">_STUDIO // PUBLICADO</span>
+        </div>
+      </div>
+      <div class="studio-info">
+        <div class="studio-cat">_STUDIO</div>
+        <div class="studio-title">${escapeHtml(data.title || 'Sin título')}</div>
+        <div class="studio-desc">${escapeHtml(data.description || '')}</div>
+        ${specs.length ? `<table class="specs">${specs.map(s => `<tr><td>${escapeHtml((s.key || '').toUpperCase())}</td><td>${escapeHtml(s.value || '')}</td></tr>`).join('')}</table>` : ''}
+        <div class="ref-section">
+          <div class="ref-label">Autoría</div>
+          <div class="ref-row"><span class="ref-name">${escapeHtml(data.author || 'not.know')}</span><span class="ref-area">${formatDate(date)}</span></div>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function sortByDateDesc(container, selector) {
+    const items = Array.from(container.querySelectorAll(selector));
+    items.sort((a, b) => (b.dataset.date || '').localeCompare(a.dataset.date || ''));
+    items.forEach(el => container.appendChild(el));
+  }
+
+  function applyRandomSizes(container) {
+    container.querySelectorAll('.post-card').forEach(card => {
+      const seed = (card.querySelector('.card-title')?.textContent || '') + card.dataset.date;
+      card.classList.remove('size-s', 'size-m', 'size-l', 'size-xl');
+      card.classList.add('size-' + pickSize(seed));
+    });
+  }
+
+  async function loadArchivePosts() {
+    const grid = document.getElementById('archive-grid');
+    if (!grid) return;
+    const posts = await fetchMarkdownFiles('KNOT.KNOW ARCHIVE/posts/archive');
+    posts.forEach(p => grid.appendChild(buildArchiveCard(p)));
+    sortByDateDesc(grid, '.post-card, .pullquote-card');
+    applyRandomSizes(grid);
+  }
+
+  async function loadStudioPosts() {
+    const feed = document.getElementById('studio-feed');
+    if (!feed) return;
+    const posts = await fetchMarkdownFiles('KNOT.KNOW ARCHIVE/posts/studio');
+    posts.forEach(p => feed.appendChild(buildStudioCard(p)));
+    sortByDateDesc(feed, '.studio-card');
+  }
+
+  loadArchivePosts();
+  loadStudioPosts();
 </script>
 </body>
 </html>
