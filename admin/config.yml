@@ -5,7 +5,7 @@ backend:
   base_url: https://www.notknowarchive.com
   auth_endpoint: api/auth
 
-media_folder: "KNOT.KNOW ARCHIVE/IMages"
+media_folder: "KNOT.KNOW ARCHIVE/images"
 public_folder: "images"
 
 collections:

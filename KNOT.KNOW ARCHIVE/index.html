@@ -158,7 +158,7 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      grid-auto-rows: 190px;
+      grid-auto-rows: 280px;
       grid-auto-flow: dense;
     }
 
@@ -168,6 +168,18 @@
     .post-card.size-l  { grid-column: span 3; grid-row: span 2; }
     .post-card.size-xl { grid-column: span 6; grid-row: span 2; }
 
+    /* En cards de 1 fila el excerpt no cabe sin aplastar la imagen a casi nada */
+    .post-card.size-s .card-excerpt,
+    .post-card.size-m .card-excerpt { display: none; }
+    .post-card.size-s .card-title,
+    .post-card.size-m .card-title {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
     .post-card {
       border-right: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
@@ -175,6 +187,8 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      overflow: hidden;
+      cursor: pointer;
     }
     .post-card:hover { background: var(--surface); }
 
@@ -207,6 +221,7 @@
       opacity: 0.65; margin-bottom: 14px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
+      line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -300,6 +315,51 @@
     .btn-cancel { font-size: 9px; letter-spacing: 0.08em; padding: 6px 14px; border: 1px solid var(--line); color: var(--cement); }
     .btn-save   { font-size: 9px; letter-spacing: 0.08em; padding: 6px 14px; border: 1px solid var(--text); color: var(--text); }
     .btn-save:hover { background: var(--text); color: var(--bg); }
+
+    /* POST VIEW (pantalla completa dentro de la web) */
+    .post-view-overlay {
+      display: none; position: fixed; inset: 0;
+      background: var(--bg); z-index: 600;
+      overflow-y: auto;
+    }
+    .post-view-overlay.open { display: block; }
+    .post-view-close {
+      position: fixed; top: 16px; right: 20px; z-index: 601;
+      font-size: 9px; letter-spacing: 0.12em; padding: 8px 14px;
+      border: 1px solid var(--line); color: var(--cement); background: var(--bg);
+      cursor: pointer;
+    }
+    .post-view-close:hover { border-color: var(--text); color: var(--text); }
+    .post-view { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+    .post-view-image { border-right: 1px solid var(--line); overflow: hidden; min-height: 320px; }
+    .post-view-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .post-view-body { padding: 80px 60px 60px; display: flex; flex-direction: column; }
+    .post-view-cat { font-size: 9px; color: var(--cement); letter-spacing: 0.16em; margin-bottom: 20px; }
+    .post-view-title {
+      font-family: var(--f-display);
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-variation-settings: 'wdth' 100, 'wght' 200;
+      text-transform: uppercase;
+      letter-spacing: 0.02em; line-height: 1.05;
+      color: var(--text); margin-bottom: 26px;
+    }
+    .post-view-text {
+      font-family: var(--f-serif);
+      font-size: 1.05rem; font-weight: 300;
+      line-height: 1.85; color: var(--text);
+      opacity: 0.8; white-space: pre-wrap;
+      margin-bottom: 30px;
+    }
+    .post-view-meta {
+      margin-top: auto; padding-top: 20px;
+      border-top: 1px solid var(--line);
+      font-size: 10px; color: var(--cement);
+    }
+    @media (max-width: 900px) {
+      .post-view { grid-template-columns: 1fr; }
+      .post-view-image { min-height: 280px; border-right: none; border-bottom: 1px solid var(--line); }
+      .post-view-body { padding: 40px 24px; }
+    }
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
@@ -550,6 +610,19 @@
   </div>
 </div>
 
+<div class="post-view-overlay" id="postView">
+  <button class="post-view-close" id="postViewClose">✕ CERRAR</button>
+  <div class="post-view">
+    <div class="post-view-image"><img id="postViewImg" src="" alt=""></div>
+    <div class="post-view-body">
+      <div class="post-view-cat" id="postViewCat"></div>
+      <div class="post-view-title" id="postViewTitle"></div>
+      <div class="post-view-text" id="postViewText"></div>
+      <div class="post-view-meta" id="postViewMeta"></div>
+    </div>
+  </div>
+</div>
+
 <script>
   function updateClock() {
     const now = new Date();
@@ -582,6 +655,51 @@
   document.getElementById('modal').addEventListener('click', e => {
     if (e.target === document.getElementById('modal')) cerrarModal();
   });
+
+  /* ---- Vista a pantalla completa de una publicación ---- */
+  const cardFullText = new WeakMap();
+  const postView = document.getElementById('postView');
+
+  function abrirPostView({ img, alt, cat, title, text, meta }) {
+    document.getElementById('postViewImg').src = img;
+    document.getElementById('postViewImg').alt = alt;
+    document.getElementById('postViewCat').textContent = cat;
+    document.getElementById('postViewTitle').textContent = title;
+    document.getElementById('postViewText').textContent = text;
+    document.getElementById('postViewMeta').textContent = meta;
+    postView.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function cerrarPostView() {
+    postView.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('postViewClose').addEventListener('click', cerrarPostView);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarPostView(); });
+
+  function cardToViewData(card) {
+    const isStudio = card.classList.contains('studio-card');
+    const img = card.querySelector(isStudio ? '.studio-image img' : '.card-image img');
+    const title = card.querySelector(isStudio ? '.studio-title' : '.card-title')?.textContent.trim() || '';
+    const cat = card.querySelector(isStudio ? '.studio-cat' : '.card-cat')?.textContent.trim() || '';
+    const author = card.querySelector(isStudio ? '.ref-name' : '.card-author')?.textContent.trim() || 'not.know';
+    const dateText = formatDate(card.dataset.date || '');
+    const text = cardFullText.get(card)
+      || card.querySelector(isStudio ? '.studio-desc' : '.card-excerpt')?.textContent.trim()
+      || '';
+    return { img: img?.getAttribute('src') || '', alt: img?.alt || '', cat, title, text, meta: `${author} · ${dateText}` };
+  }
+
+  function attachCardOpenHandlers(container, selector) {
+    if (!container) return;
+    container.addEventListener('click', e => {
+      const card = e.target.closest(selector);
+      if (!card) return;
+      abrirPostView(cardToViewData(card));
+    });
+  }
+  attachCardOpenHandlers(document.getElementById('archive-grid'), '.post-card');
+  attachCardOpenHandlers(document.getElementById('studio-feed'), '.studio-card');
 
   /* ---- Publicaciones desde Decap CMS (GitHub) ---- */
   const GITHUB_REPO   = 'karimsnnchez/notknowarchive';
@@ -698,6 +816,7 @@
           ${tags.map(t => `<span class="meta-tag">${escapeHtml(t)}</span>`).join('')}
         </div>
       </div>`;
+    cardFullText.set(div, body.replace(/[#*_`>]/g, '').trim());
     return div;
   }
 
